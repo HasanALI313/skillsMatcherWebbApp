@@ -14,9 +14,34 @@ from datetime import datetime
 app = Flask(__name__)
 app.secret_key = os.urandom(24).hex()
 
+import sys as _sys
+_sys.stderr.write("[startup] GEMINI_API_KEY found: {}\n".format(
+    "yes" if os.environ.get("GEMINI_API_KEY") else "NO"
+))
+_sys.stderr.write("[startup] GEMINI_MODEL found: {}\n".format(
+    "yes" if os.environ.get("GEMINI_MODEL") else "NO (will use default)"
+))
+_sys.stderr.write("[startup] ADZUNA_APP_ID found: {}\n".format(
+    "yes" if os.environ.get("ADZUNA_APP_ID") else "NO"
+))
+_sys.stderr.write("[startup] ADZUNA_API_KEY found: {}\n".format(
+    "yes" if os.environ.get("ADZUNA_API_KEY") else "NO"
+))
+_sys.stderr.flush()
+
 @app.route("/")
 def home():
     return render_template("home.html", active="home", now=datetime.now())
+
+@app.route("/health")
+def health():
+    return {
+        "status": "ok",
+        "gemini_key_set": bool(os.environ.get("GEMINI_API_KEY")),
+        "gemini_model": os.environ.get("GEMINI_MODEL") or "default",
+        "adzuna_id_set": bool(os.environ.get("ADZUNA_APP_ID")),
+        "adzuna_key_set": bool(os.environ.get("ADZUNA_API_KEY")),
+    }
 
 @app.route("/find")
 def find():

@@ -12,42 +12,62 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Update env vars on Render & trigger deploy
+      - name: Look up env group
+        id: find-group
+        env:
+          RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
+          RENDER_ENV_GROUP_NAME: ${{ secrets.RENDER_ENV_GROUP_NAME }}
+        run: |
+          if [ -z "$RENDER_ENV_GROUP_NAME" ]; then
+            echo "group_id=" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+          GROUPS=$(curl -s -G "https://api.render.com/v1/env-groups" \
+            -H "Authorization: Bearer ${RENDER_API_KEY}" \
+            --data-urlencode "name=$RENDER_ENV_GROUP_NAME")
+          ID=$(echo "$GROUPS" | python3 -c "import sys, json; g=json.load(sys.stdin); print(g[0]['id'] if g else '')" 2>/dev/null || echo "")
+          echo "group_id=$ID" >> $GITHUB_OUTPUT
+          echo "Found group: $ID"
+
+      - name: Sync env vars & deploy
         env:
           RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
           RENDER_SERVICE_ID: ${{ secrets.RENDER_SERVICE_ID }}
+          RENDER_ENV_GROUP_ID: ${{ steps.find-group.outputs.group_id }}
           ADZUNA_APP_ID: ${{ secrets.ADZUNA_APP_ID }}
           ADZUNA_API_KEY: ${{ secrets.ADZUNA_API_KEY }}
           ADZUNA_COUNTRY: ${{ secrets.ADZUNA_COUNTRY }}
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           GEMINI_MODEL: ${{ secrets.GEMINI_MODEL }}
         run: |
-          echo "Updating environment variables on Render..."
+          set -e
 
-          cat > /tmp/env-vars.json << 'EOF'
-          [
-            {"key": "ADZUNA_APP_ID", "value": "__ADZUNA_APP_ID__"},
-            {"key": "ADZUNA_API_KEY", "value": "__ADZUNA_API_KEY__"},
-            {"key": "ADZUNA_COUNTRY", "value": "__ADZUNA_COUNTRY__"},
-            {"key": "GEMINI_API_KEY", "value": "__GEMINI_API_KEY__"},
-            {"key": "GEMINI_MODEL", "value": "__GEMINI_MODEL__"}
-          ]
-          EOF
+          if [ -n "$RENDER_ENV_GROUP_ID" ]; then
+            echo "=== Using env group: $RENDER_ENV_GROUP_ID ==="
+            echo "Linking service to env group..."
+            curl -sf -X POST "https://api.render.com/v1/env-groups/${RENDER_ENV_GROUP_ID}/services/${RENDER_SERVICE_ID}" \
+              -H "Authorization: Bearer ${RENDER_API_KEY}" && echo "Linked OK"
 
-          sed -i "s|__ADZUNA_APP_ID__|$ADZUNA_APP_ID|g" /tmp/env-vars.json
-          sed -i "s|__ADZUNA_API_KEY__|$ADZUNA_API_KEY|g" /tmp/env-vars.json
-          sed -i "s|__ADZUNA_COUNTRY__|$ADZUNA_COUNTRY|g" /tmp/env-vars.json
-          sed -i "s|__GEMINI_API_KEY__|$GEMINI_API_KEY|g" /tmp/env-vars.json
-          sed -i "s|__GEMINI_MODEL__|$GEMINI_MODEL|g" /tmp/env-vars.json
+            echo "Updating env vars in group..."
+            for var in ADZUNA_APP_ID ADZUNA_API_KEY ADZUNA_COUNTRY GEMINI_API_KEY GEMINI_MODEL; do
+              val=$(eval echo \$$var)
+              payload=$(python3 -c "import json; print(json.dumps({'value': '${val}'}))")
+              curl -sf -X PUT "https://api.render.com/v1/env-groups/${RENDER_ENV_GROUP_ID}/env-vars/${var}" \
+                -H "Authorization: Bearer ${RENDER_API_KEY}" \
+                -H "Content-Type: application/json" \
+                -d "$payload" && echo "  $var updated"
+            done
+          else
+            echo "=== Using service-level env vars ==="
+            python3 -c "import json; V=[('ADZUNA_APP_ID','${ADZUNA_APP_ID}'),('ADZUNA_API_KEY','${ADZUNA_API_KEY}'),('ADZUNA_COUNTRY','${ADZUNA_COUNTRY}'),('GEMINI_API_KEY','${GEMINI_API_KEY}'),('GEMINI_MODEL','${GEMINI_MODEL}')]; print(json.dumps([{'key':k,'value':v} for k,v in V]))" > /tmp/env-vars.json
+            curl -sf -X PUT "https://api.render.com/v1/services/${RENDER_SERVICE_ID}/env-vars" \
+              -H "Authorization: Bearer ${RENDER_API_KEY}" \
+              -H "Content-Type: application/json" \
+              -d @/tmp/env-vars.json && echo "Service-level env vars updated"
+          fi
 
-          curl -s -X PUT "https://api.render.com/v1/services/${RENDER_SERVICE_ID}/env-vars" \
+          echo "=== Triggering deploy ==="
+          curl -sf -X POST "https://api.render.com/v1/services/${RENDER_SERVICE_ID}/deploys" \
             -H "Authorization: Bearer ${RENDER_API_KEY}" \
             -H "Content-Type: application/json" \
-            -d @/tmp/env-vars.json && echo " Env vars updated."
-
-          echo "Triggering deploy..."
-          curl -s -X POST \
-            "https://api.render.com/v1/services/${RENDER_SERVICE_ID}/deploys" \
-            -H "Authorization: Bearer ${RENDER_API_KEY}" \
-            -H "Content-Type: application/json" \
-            -d '{"clearCache": "do_not_clear"}' && echo " Deploy triggered."
+            -d '{"clearCache": "do_not_clear"}' && echo "Deploy triggered"

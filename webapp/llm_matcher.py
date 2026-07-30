@@ -11,7 +11,19 @@ except ImportError:
         GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "")
         GEMINI_MODEL = os.environ.get("GEMINI_MODEL", "gemini-3.1-flash-lite-preview")
 
-client = genai.Client(api_key=GEMINI_API_KEY)
+_client = None
+_model = GEMINI_MODEL
+
+def _get_client():
+    global _client
+    if _client is None:
+        if not GEMINI_API_KEY:
+            raise RuntimeError(
+                "GEMINI_API_KEY is not set. "
+                "Set it in webapp/config.py or as an environment variable."
+            )
+        _client = genai.Client(api_key=GEMINI_API_KEY)
+    return _client
 
 MATCH_PROMPT = """Given these 5 skills: {skills}
 
@@ -31,7 +43,8 @@ Return ONLY valid JSON in this exact format (no markdown, no code fences, no ext
 def match_top_3(user_skills):
     prompt = MATCH_PROMPT.format(skills=", ".join(user_skills))
     try:
-        resp = client.models.generate_content(model=GEMINI_MODEL, contents=prompt)
+        client = _get_client()
+        resp = client.models.generate_content(model=_model, contents=prompt)
         raw = resp.text.strip()
         raw = raw.removeprefix("```json").removeprefix("```").removesuffix("```").strip()
         data = json.loads(raw)
@@ -42,16 +55,21 @@ def match_top_3(user_skills):
             score = len(set(s.lower() for s in user_skills) & set(s.lower() for s in required))
             results.append((title, score, required))
         return results
+    except RuntimeError:
+        raise
     except Exception as e:
         raise RuntimeError(f"LLM matching failed: {e}")
 
 def get_job_skills(title):
     prompt = SKILLS_PROMPT.format(title=title)
     try:
-        resp = client.models.generate_content(model=GEMINI_MODEL, contents=prompt)
+        client = _get_client()
+        resp = client.models.generate_content(model=_model, contents=prompt)
         raw = resp.text.strip()
         raw = raw.removeprefix("```json").removeprefix("```").removesuffix("```").strip()
         data = json.loads(raw)
         return data["skills"][:10]
+    except RuntimeError:
+        raise
     except Exception as e:
         return []

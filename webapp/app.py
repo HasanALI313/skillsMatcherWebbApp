@@ -1,4 +1,11 @@
 import sys, os
+
+os.environ.setdefault("ADZUNA_APP_ID", "9109bf5d")
+os.environ.setdefault("ADZUNA_API_KEY", "449dd455947b555dd8910a08a9fc5f8f")
+os.environ.setdefault("ADZUNA_COUNTRY", "gb")
+os.environ.setdefault("GEMINI_API_KEY", "AQ.Ab8RN6Io0Zc_oFIOouQisQbz5wXd-__Lwjovo1lpGzwovUsW6Q")
+os.environ.setdefault("GEMINI_MODEL", "gemini-3.1-flash-lite-preview")
+
 sys.path.insert(0, os.path.dirname(__file__))
 
 try:

@@ -23,22 +23,31 @@ jobs:
           GEMINI_MODEL: ${{ secrets.GEMINI_MODEL }}
         run: |
           echo "Updating environment variables on Render..."
+
+          cat > /tmp/env-vars.json << 'EOF'
+          [
+            {"key": "ADZUNA_APP_ID", "value": "__ADZUNA_APP_ID__"},
+            {"key": "ADZUNA_API_KEY", "value": "__ADZUNA_API_KEY__"},
+            {"key": "ADZUNA_COUNTRY", "value": "__ADZUNA_COUNTRY__"},
+            {"key": "GEMINI_API_KEY", "value": "__GEMINI_API_KEY__"},
+            {"key": "GEMINI_MODEL", "value": "__GEMINI_MODEL__"}
+          ]
+          EOF
+
+          sed -i "s|__ADZUNA_APP_ID__|$ADZUNA_APP_ID|g" /tmp/env-vars.json
+          sed -i "s|__ADZUNA_API_KEY__|$ADZUNA_API_KEY|g" /tmp/env-vars.json
+          sed -i "s|__ADZUNA_COUNTRY__|$ADZUNA_COUNTRY|g" /tmp/env-vars.json
+          sed -i "s|__GEMINI_API_KEY__|$GEMINI_API_KEY|g" /tmp/env-vars.json
+          sed -i "s|__GEMINI_MODEL__|$GEMINI_MODEL|g" /tmp/env-vars.json
+
           curl -s -X PUT "https://api.render.com/v1/services/${RENDER_SERVICE_ID}/env-vars" \
             -H "Authorization: Bearer ${RENDER_API_KEY}" \
             -H "Content-Type: application/json" \
-            -d "{
-              \"envVars\": [
-                {\"key\": \"ADZUNA_APP_ID\", \"value\": \"${ADZUNA_APP_ID}\"},
-                {\"key\": \"ADZUNA_API_KEY\", \"value\": \"${ADZUNA_API_KEY}\"},
-                {\"key\": \"ADZUNA_COUNTRY\", \"value\": \"${ADZUNA_COUNTRY}\"},
-                {\"key\": \"GEMINI_API_KEY\", \"value\": \"${GEMINI_API_KEY}\"},
-                {\"key\": \"GEMINI_MODEL\", \"value\": \"${GEMINI_MODEL}\"}
-              ]
-            }" && echo "Env vars updated."
+            -d @/tmp/env-vars.json && echo " Env vars updated."
 
           echo "Triggering deploy..."
           curl -s -X POST \
             "https://api.render.com/v1/services/${RENDER_SERVICE_ID}/deploys" \
             -H "Authorization: Bearer ${RENDER_API_KEY}" \
             -H "Content-Type: application/json" \
-            -d '{"clearCache": "do_not_clear"}' && echo "Deploy triggered."
+            -d '{"clearCache": "do_not_clear"}' && echo " Deploy triggered."

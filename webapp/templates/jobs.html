@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+{% block title %}Real Jobs - Skills Matcher{% endblock %}
+{% block content %}
+<div class="card">
+    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.75rem;">
+        <div>
+            <h1 style="margin-bottom: 0;">Real Job Listings</h1>
+            {% if query %}
+            <p style="margin-top: 0.25rem;">Showing jobs for <strong>{{ query }}</strong></p>
+            {% endif %}
+        </div>
+        <div style="display: flex; gap: 0.5rem;">
+            {% if can_build and query %}
+            <a href="/build/{{ query }}" style="text-decoration: none;"><button class="btn-sm" style="margin: 0;">Create CV & Cover Letter</button></a>
+            {% endif %}
+            <a href="/find" style="text-decoration: none;"><button class="btn-secondary btn-sm" style="margin: 0;">Find Another Job</button></a>
+        </div>
+    </div>
+
+    <form method="GET" action="/jobs" style="margin-top: 1rem;">
+        <label for="q">Job title</label>
+        <div class="inline-group">
+            <input type="text" id="q" name="q" placeholder="e.g. Software Engineer" value="{{ query }}" required>
+            <button type="submit" style="margin: 0; white-space: nowrap;">Search</button>
+        </div>
+    </form>
+</div>
+
+{% if listings %}
+<p style="margin: 0.75rem 0 0.25rem; font-size: 0.9rem; color: #666;">{{ listings|length }} jobs found</p>
+{% for job in listings %}
+<div class="card" style="margin-top: 0.75rem;">
+    <div style="display: flex; justify-content: space-between; align-items: start; flex-wrap: wrap; gap: 0.5rem;">
+        <div>
+            <h2 style="font-size: 1.15rem; margin-bottom: 0.25rem;">{{ job.title }}</h2>
+            <p style="margin: 0; color: #666;">
+                {{ job.company.display_name }} &bull; {{ job.location.display_name }}
+            </p>
+        </div>
+        {% if job.salary_min or job.salary_max %}
+        <span class="badge" style="white-space: nowrap;">
+            {% if job.salary_min and job.salary_max %}
+                &pound;{{ "%.0f"|format(job.salary_min) }} - &pound;{{ "%.0f"|format(job.salary_max) }}
+            {% elif job.salary_min %}
+                From &pound;{{ "%.0f"|format(job.salary_min) }}
+            {% elif job.salary_max %}
+                Up to &pound;{{ "%.0f"|format(job.salary_max) }}
+            {% endif %}
+        </span>
+        {% endif %}
+    </div>
+    <p style="margin-top: 0.75rem; font-size: 0.9rem; color: #555;">{{ job.description[:300] }}{% if job.description|length > 300 %}...{% endif %}</p>
+    <div style="display: flex; gap: 0.5rem; flex-wrap: wrap; margin-top: 0.75rem;">
+        <a href="{{ job.redirect_url }}" target="_blank" rel="noopener noreferrer" style="text-decoration: none;">
+            <button class="btn-success btn-sm" style="margin: 0;">Apply on Adzuna</button>
+        </a>
+        {% if can_build and query %}
+        <a href="/build/{{ query }}" style="text-decoration: none;">
+            <button class="btn-sm" style="margin: 0;">Create CV & Cover Letter for This Role</button>
+        </a>
+        {% endif %}
+    </div>
+</div>
+{% endfor %}
+{% elif query %}
+<div class="card" style="margin-top: 1.5rem; text-align: center;">
+    <p style="color: #666;">No jobs found for "{{ query }}". Try a different search term.</p>
+</div>
+{% endif %}
+{% endblock %}

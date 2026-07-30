@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% block title %}Build CV - Skills Matcher{% endblock %}
+{% block content %}
+<div class="card">
+    <div style="display: flex; justify-content: space-between; align-items: start;">
+        <div>
+            <h1 style="margin-bottom: 0;">Build Your CV & Cover Letter</h1>
+            <p style="margin-top: 0.25rem;">Tailored for: <strong>{{ job_title }}</strong></p>
+        </div>
+        <a href="/jobs?q={{ job_title }}" style="text-decoration: none;"><button class="btn-secondary btn-sm" style="margin: 0;">Back to Jobs</button></a>
+    </div>
+
+    <div style="background: #f0f9ff; border: 1px solid #bae6fd; border-radius: 8px; padding: 1rem; margin: 1rem 0;">
+        <strong>Key skills for this role:</strong>
+        <div class="skill-tags" style="margin-top: 0.5rem;">
+            {% for s in required %}
+            <span>{{ s }}</span>
+            {% endfor %}
+        </div>
+    </div>
+
+    <form method="POST" action="/generate">
+        <input type="hidden" name="job_title" value="{{ job_title }}">
+
+        <label for="name">Full Name</label>
+        <input type="text" id="name" name="name" placeholder="John Doe" required>
+
+        <label for="email">Email</label>
+        <input type="email" id="email" name="email" placeholder="john@example.com" required>
+
+        <label for="phone">Phone</label>
+        <input type="text" id="phone" name="phone" placeholder="+1 234 567 890" required>
+
+        <label for="location">Location</label>
+        <input type="text" id="location" name="location" placeholder="City, Country" required>
+
+        <label for="summary">Professional Summary</label>
+        <textarea id="summary" name="summary" rows="4" placeholder="Brief overview of your career and key strengths..." required></textarea>
+
+        <label for="experience">Work Experience</label>
+        <textarea id="experience" name="experience" rows="5" placeholder="Job title, company, dates, and key responsibilities..." required></textarea>
+
+        <label for="education">Education</label>
+        <textarea id="education" name="education" rows="3" placeholder="Degree, institution, year..." required></textarea>
+
+        <label for="achievements">Key Achievements</label>
+        <textarea id="achievements" name="achievements" rows="3" placeholder="Notable accomplishments relevant to this role..." required></textarea>
+
+        <button type="submit">Generate CV & Cover Letter</button>
+    </form>
+</div>
+{% endblock %}

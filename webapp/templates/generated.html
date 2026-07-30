@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+{% block title %}Your CV & Cover Letter - Skills Matcher{% endblock %}
+{% block content %}
+
+<div class="card">
+    <div style="display: flex; justify-content: space-between; align-items: start;">
+        <div>
+            <h1 style="margin-bottom: 0;">Your Tailored Documents</h1>
+            <p style="margin-top: 0.25rem;">Target role: <strong>{{ data.job_title }}</strong></p>
+        </div>
+        <a href="/build/{{ data.job_title }}" style="text-decoration: none;"><button class="btn-secondary btn-sm" style="margin: 0;">Edit Details</button></a>
+    </div>
+</div>
+
+<!-- CV -->
+<div class="card" style="margin-top: 1.5rem;">
+    <div style="display: flex; justify-content: space-between; align-items: start;">
+        <div>
+            <h1 style="font-size: 1.5rem;">{{ data.name }}</h1>
+            <p style="margin: 0.25rem 0;">{{ data.email }} &bull; {{ data.phone }} &bull; {{ data.location }}</p>
+        </div>
+    </div>
+
+    <hr style="margin: 1rem 0;">
+
+    <h2>Professional Summary</h2>
+    <p>{{ data.summary }}</p>
+
+    <h2 style="margin-top: 1.5rem;">Skills</h2>
+    <div class="skill-tags">
+        {% for s in required %}
+        <span>{{ s }}</span>
+        {% endfor %}
+    </div>
+
+    <h2 style="margin-top: 1.5rem;">Experience</h2>
+    <p style="white-space: pre-wrap;">{{ data.experience }}</p>
+
+    <h2 style="margin-top: 1.5rem;">Education</h2>
+    <p style="white-space: pre-wrap;">{{ data.education }}</p>
+
+    <h2 style="margin-top: 1.5rem;">Key Achievements</h2>
+    <p style="white-space: pre-wrap;">{{ data.achievements }}</p>
+</div>
+
+<!-- Cover Letter -->
+<div class="card" style="margin-top: 1.5rem;">
+    <h1 style="font-size: 1.5rem;">Cover Letter</h1>
+
+    <p>{{ data.name }}<br>{{ data.phone }} &bull; {{ data.email }}<br>{{ data.location }}</p>
+
+    <p>{{ now.strftime("%B %d, %Y") }}</p>
+
+    <p>Hiring Manager<br>{{ data.job_title }}<br>Company Name</p>
+
+    <p>Dear Hiring Manager,</p>
+
+    <p>I am writing to express my strong interest in the <strong>{{ data.job_title }}</strong> position. With my background and expertise, I am confident that I would be a valuable addition to your team.</p>
+
+    <p>{{ data.summary }}</p>
+
+    <p>Throughout my career, I have developed strong skills in areas critical to this role, including
+    {% for s in required %}
+    {% if loop.index < required|length %}{{ s }}{% if not loop.last %}, {% endif %}{% else %}and {{ s }}{% endif %}
+    {% endfor %}.
+    My experience has prepared me well to contribute effectively from day one.</p>
+
+    <p><strong>Key achievements that demonstrate my fit:</strong></p>
+    <p style="white-space: pre-wrap;">{{ data.achievements }}</p>
+
+    <p>I would welcome the opportunity to discuss how my skills and experience align with the needs of your team. Thank you for considering my application.</p>
+
+    <p>Sincerely,<br>{{ data.name }}</p>
+</div>
+
+<div class="card" style="margin-top: 1.5rem; text-align: center;">
+    <button onclick="window.print()">Print / Save as PDF</button>
+    <a href="/jobs?q={{ data.job_title }}" style="text-decoration: none;"><button style="background: #059673; margin-left: 0.5rem;">Find Real Jobs</button></a>
+    <a href="/find" style="text-decoration: none;"><button style="background: #6b7280; margin-left: 0.5rem;">Start Over</button></a>
+</div>
+
+{% endblock %}

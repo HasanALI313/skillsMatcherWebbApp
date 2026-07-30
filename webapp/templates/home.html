@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% block title %}Skills Matcher - Home{% endblock %}
+{% block content %}
+<div class="card hero">
+    <h1>Find Your Perfect Job</h1>
+    <p>Enter your top 5 skills, get matched to a career, build a tailored CV & cover letter, and find real openings — all in one place.</p>
+    <a href="/find"><button style="font-size: 1.1rem; padding: 0.85rem 2rem;">Get Started</button></a>
+</div>
+
+<div class="steps">
+    <div class="step">
+        <div class="step-number" style="background: #dbeafe; color: #1d4ed8;">1</div>
+        <h3>Enter Skills</h3>
+        <p>List your top 5 skills</p>
+    </div>
+    <span class="step-arrow">&#8594;</span>
+    <div class="step">
+        <div class="step-number" style="background: #dcfce7; color: #15803d;">2</div>
+        <h3>Get Matched</h3>
+        <p>See your top 3 careers</p>
+    </div>
+    <span class="step-arrow">&#8594;</span>
+    <div class="step">
+        <div class="step-number" style="background: #fef3c7; color: #b45309;">3</div>
+        <h3>Build Documents</h3>
+        <p>CV + cover letter tailored to the role</p>
+    </div>
+    <span class="step-arrow">&#8594;</span>
+    <div class="step">
+        <div class="step-number" style="background: #fce7f3; color: #be185d;">4</div>
+        <h3>Find Real Jobs</h3>
+        <p>Live listings via Adzuna API</p>
+    </div>
+</div>
+
+<div class="features">
+    <div class="card feature">
+        <h3>Smart Matching</h3>
+        <p>We compare your skills against 20+ job profiles to find the best fit.</p>
+    </div>
+    <div class="card feature">
+        <h3>Tailored Documents</h3>
+        <p>Generate a CV and cover letter customized to your matched role.</p>
+    </div>
+    <div class="card feature">
+        <h3>Live Job Listings</h3>
+        <p>Browse real openings from the Adzuna API for your target role.</p>
+    </div>
+</div>
+{% endblock %}

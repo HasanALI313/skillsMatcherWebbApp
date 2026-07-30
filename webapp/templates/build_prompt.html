@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block title %}Build CV - Skills Matcher{% endblock %}
+{% block content %}
+<div class="card">
+    <h1>Build CV & Cover Letter</h1>
+    <p>Enter a job title to get started building a tailored CV and cover letter.</p>
+
+    <form method="GET" action="/build/placeholder" id="build-form">
+        <label for="job_title">Job Title</label>
+        <input type="text" id="job_title" name="job_title" placeholder="e.g. Software Engineer, Data Scientist, Product Manager" required>
+
+        <button type="submit">Continue to Builder</button>
+    </form>
+
+    <hr style="margin: 1.5rem 0;">
+
+    <p style="text-align: center; color: #666;">Or <a href="/find" style="color: #3b82f6;">find your ideal career by entering your skills</a>.</p>
+</div>
+
+<script>
+document.getElementById("build-form").addEventListener("submit", function(e) {
+    e.preventDefault();
+    var title = document.getElementById("job_title").value.trim();
+    if (title) {
+        window.location.href = "/build/" + encodeURIComponent(title);
+    }
+});
+</script>
+{% endblock %}

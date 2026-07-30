@@ -3,8 +3,16 @@
 {% block content %}
 <div class="card">
     {% if not top_3 %}
-    <h1>Find Your Job</h1>
-    <p>Enter your top 5 skills below to discover your matching career.</p>
+    <div style="display: flex; justify-content: space-between; align-items: start; flex-wrap: wrap; gap: 0.75rem; margin-bottom: 1rem;">
+        <div>
+            <h1 style="margin-bottom: 0;">Find Your Job</h1>
+            <p style="margin-top: 0.25rem;">Enter your top 5 skills below to discover your matching career.</p>
+        </div>
+        <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+            <a href="/jobs" style="text-decoration: none;"><button class="btn-success btn-sm" style="margin: 0;">Search Jobs Directly</button></a>
+            <a href="/build" style="text-decoration: none;"><button class="btn-secondary btn-sm" style="margin: 0;">Build CV Only</button></a>
+        </div>
+    </div>
     {% else %}
     <div style="display: flex; justify-content: space-between; align-items: center;">
         <div>

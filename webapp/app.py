@@ -4,9 +4,11 @@ sys.path.insert(0, os.path.dirname(__file__))
 try:
     from webapp.agents import ParentOrchestrator
     from webapp.adzuna import search_jobs
+    from webapp.kafka_producer import send_skills_match, send_job_search, send_cv_generation
 except ImportError:
     from agents import ParentOrchestrator
     from adzuna import search_jobs
+    from kafka_producer import send_skills_match, send_job_search, send_cv_generation
 
 from flask import Flask, render_template, request, session, jsonify
 from datetime import datetime
@@ -44,9 +46,15 @@ def match():
     try:
         top_3 = orchestrator.match_skills(user_skills)
         session["last_match"] = [(title, skills) for title, score, skills in top_3]
+        send_skills_match(user_skills, top_3)
         return render_template("find_job.html", active="find", now=datetime.now(), top_3=top_3, user_skills=user_skills)
     except RuntimeError as e:
         return render_template("find_job.html", active="find", now=datetime.now(), error=str(e))
+
+
+@app.route("/build", methods=["GET"])
+def build_prompt():
+    return render_template("build_prompt.html", active="build", now=datetime.now())
 
 
 @app.route("/build/<path:job_title>")
@@ -59,7 +67,7 @@ def build(job_title):
                 break
     if not required:
         required = orchestrator.get_skills_for_title(job_title)
-    return render_template("build.html", active="find", job_title=job_title, required=required or [], now=datetime.now())
+    return render_template("build.html", active="build", job_title=job_title, required=required or [], now=datetime.now())
 
 
 @app.route("/generate", methods=["POST"])
@@ -79,6 +87,7 @@ def generate():
 
     cv_text = orchestrator.build_cv(dict(data), job_title, required or [])
     cover_letter_text = orchestrator.build_cover_letter(dict(data), job_title, required or [])
+    send_cv_generation(job_title, data.get("name", ""))
     return render_template(
         "generated.html", active="find", data=data, required=required or [],
         cv_text=cv_text, cover_letter_text=cover_letter_text, now=datetime.now()
@@ -98,9 +107,10 @@ def autocomplete_skill():
 def jobs_list():
     job_title = request.args.get("q", "")
     if not job_title:
-        return render_template("jobs.html", active="find", now=datetime.now(), query="", listings=[])
+        return render_template("jobs.html", active="jobs", now=datetime.now(), query="", listings=[])
     listings = search_jobs(job_title)
-    return render_template("jobs.html", active="find", now=datetime.now(), query=job_title, listings=listings, can_build=True)
+    send_job_search(job_title, len(listings))
+    return render_template("jobs.html", active="jobs", now=datetime.now(), query=job_title, listings=listings, can_build=True)
 
 
 @app.route("/contact", methods=["GET", "POST"])

@@ -1,7 +1,15 @@
+import os
 import json
 from google import genai
 
-from webapp.config import GEMINI_API_KEY, GEMINI_MODEL
+try:
+    from webapp.config import GEMINI_API_KEY, GEMINI_MODEL
+except ImportError:
+    try:
+        from config import GEMINI_API_KEY, GEMINI_MODEL
+    except ImportError:
+        GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "")
+        GEMINI_MODEL = os.environ.get("GEMINI_MODEL", "gemini-2.0-flash-lite")
 
 _client = None
 _model = GEMINI_MODEL

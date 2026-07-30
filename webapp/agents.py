@@ -1,15 +1,7 @@
-import os
 import json
 from google import genai
 
-try:
-    from webapp.config import GEMINI_API_KEY, GEMINI_MODEL
-except ImportError:
-    try:
-        from config import GEMINI_API_KEY, GEMINI_MODEL
-    except ImportError:
-        GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "")
-        GEMINI_MODEL = os.environ.get("GEMINI_MODEL", "gemini-2.0-flash-lite")
+from webapp.config import GEMINI_API_KEY, GEMINI_MODEL
 
 _client = None
 _model = GEMINI_MODEL
@@ -21,7 +13,7 @@ def _get_client():
         if not GEMINI_API_KEY:
             raise RuntimeError(
                 "GEMINI_API_KEY is not set. "
-                "Set it in webapp/config.py or as an environment variable."
+                "Set it as an environment variable."
             )
         _client = genai.Client(api_key=GEMINI_API_KEY)
     return _client

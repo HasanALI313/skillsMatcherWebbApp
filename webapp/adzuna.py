@@ -1,18 +1,10 @@
 import os
-
-try:
-    from webapp.config import ADZUNA_APP_ID, ADZUNA_API_KEY, ADZUNA_COUNTRY
-except ImportError:
-    try:
-        from config import ADZUNA_APP_ID, ADZUNA_API_KEY, ADZUNA_COUNTRY
-    except ImportError:
-        ADZUNA_APP_ID = os.environ.get("ADZUNA_APP_ID", "")
-        ADZUNA_API_KEY = os.environ.get("ADZUNA_API_KEY", "")
-        ADZUNA_COUNTRY = os.environ.get("ADZUNA_COUNTRY", "gb")
-
 import requests
 
+from webapp.config import ADZUNA_APP_ID, ADZUNA_API_KEY, ADZUNA_COUNTRY
+
 BASE_URL = "https://api.adzuna.com/v1/api/jobs"
+
 
 def search_jobs(query, results_per_page=10):
     url = f"{BASE_URL}/{ADZUNA_COUNTRY}/search/1"

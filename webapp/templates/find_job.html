@@ -27,7 +27,10 @@
     <form method="POST" action="/match">
         {% for i in range(1, 6) %}
         <label for="skill{{ i }}">Skill {{ i }}</label>
-        <input type="text" id="skill{{ i }}" name="skill{{ i }}" placeholder="e.g. Python" required>
+        <div style="position: relative;">
+            <input type="text" id="skill{{ i }}" name="skill{{ i }}" class="skill-input" placeholder="e.g. Python" required autocomplete="off">
+            <div id="suggestions-{{ i }}" class="autocomplete-suggestions"></div>
+        </div>
         {% endfor %}
 
         <button type="submit">Find My Job</button>
@@ -49,4 +52,93 @@
     </div>
     {% endfor %}
 </div>
+
+<style>
+.autocomplete-suggestions {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: #fff;
+    border: 1px solid #d1d5db;
+    border-top: none;
+    border-radius: 0 0 8px 8px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    z-index: 1000;
+    display: none;
+    max-height: 200px;
+    overflow-y: auto;
+}
+.autocomplete-suggestions div {
+    padding: 0.5rem 0.75rem;
+    cursor: pointer;
+    font-size: 0.9rem;
+    color: #333;
+    transition: background 0.15s;
+}
+.autocomplete-suggestions div:hover {
+    background: #f0f4ff;
+    color: #1d4ed8;
+}
+.autocomplete-suggestions div:not(:last-child) {
+    border-bottom: 1px solid #f3f4f6;
+}
+</style>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    const inputs = document.querySelectorAll(".skill-input");
+    let debounceTimers = {};
+
+    inputs.forEach(function(input) {
+        const index = input.id.replace("skill", "");
+        const suggestionsBox = document.getElementById("suggestions-" + index);
+
+        input.addEventListener("input", function() {
+            const query = this.value.trim();
+            clearTimeout(debounceTimers[index]);
+
+            if (query.length < 2) {
+                suggestionsBox.style.display = "none";
+                return;
+            }
+
+            debounceTimers[index] = setTimeout(function() {
+                fetch("/api/autocomplete_skill?q=" + encodeURIComponent(query))
+                    .then(function(res) { return res.json(); })
+                    .then(function(data) {
+                        suggestionsBox.innerHTML = "";
+                        if (data.length === 0) {
+                            suggestionsBox.style.display = "none";
+                            return;
+                        }
+                        data.forEach(function(suggestion) {
+                            var div = document.createElement("div");
+                            div.textContent = suggestion;
+                            div.addEventListener("click", function() {
+                                input.value = suggestion;
+                                suggestionsBox.style.display = "none";
+                            });
+                            suggestionsBox.appendChild(div);
+                        });
+                        suggestionsBox.style.display = "block";
+                    })
+                    .catch(function() {
+                        suggestionsBox.style.display = "none";
+                    });
+            }, 250);
+        });
+
+        input.addEventListener("blur", function() {
+            setTimeout(function() { suggestionsBox.style.display = "none"; }, 200);
+        });
+
+        input.addEventListener("focus", function() {
+            if (suggestionsBox.children.length > 0) {
+                suggestionsBox.style.display = "block";
+            }
+        });
+    });
+});
+</script>
 {% endblock %}

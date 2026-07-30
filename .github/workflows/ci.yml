@@ -1,0 +1,64 @@
+name: CI
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    environment: test
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pyflakes
+          pip install -r requirements.txt
+
+      - name: Check Python syntax
+        run: |
+          python -m py_compile webapp/config.py
+          python -m py_compile webapp/agents.py
+          python -m py_compile webapp/adzuna.py
+          python -m py_compile webapp/app.py
+          python -m py_compile wsgi.py
+
+      - name: Lint with pyflakes
+        run: pyflakes webapp/ wsgi.py
+
+      - name: Verify imports with secrets
+        env:
+          ADZUNA_APP_ID: ${{ secrets.ADZUNA_APP_ID }}
+          ADZUNA_API_KEY: ${{ secrets.ADZUNA_API_KEY }}
+          ADZUNA_COUNTRY: ${{ secrets.ADZUNA_COUNTRY }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GEMINI_MODEL: ${{ secrets.GEMINI_MODEL }}
+        run: |
+          python -c "
+            import sys; sys.path.insert(0, '.')
+            from webapp.config import GEMINI_API_KEY, GEMINI_MODEL, ADZUNA_APP_ID, ADZUNA_API_KEY
+            assert GEMINI_API_KEY, 'GEMINI_API_KEY is empty'
+            assert ADZUNA_APP_ID, 'ADZUNA_APP_ID is empty'
+            print(f'All env vars loaded: GEMINI_API_KEY={GEMINI_API_KEY[:8]}..., GEMINI_MODEL={GEMINI_MODEL}, ADZUNA_APP_ID={ADZUNA_APP_ID[:4]}...')
+          "
+          python -c "
+            import sys; sys.path.insert(0, '.')
+            from webapp.agents import ParentOrchestrator
+            o = ParentOrchestrator()
+            print(f'Orchestrator created with agents: skill_matcher={bool(o.skill_matcher)}, cv_builder={bool(o.cv_builder)}, cover_letter_builder={bool(o.cover_letter_builder)}, autocomplete={bool(o.autocomplete)}')
+          "
+          python -c "
+            import sys; sys.path.insert(0, '.')
+            from webapp.adzuna import search_jobs
+            print('Adzuna module loaded')
+          "

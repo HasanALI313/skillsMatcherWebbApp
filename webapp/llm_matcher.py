@@ -1,6 +1,13 @@
+import sys, os
+
+try:
+    from webapp.config import GEMINI_API_KEY, GEMINI_MODEL
+except ImportError:
+    sys.path.insert(0, os.path.dirname(__file__))
+    from config import GEMINI_API_KEY, GEMINI_MODEL
+
 import json
 from google import genai
-from config import GEMINI_API_KEY, GEMINI_MODEL
 
 client = genai.Client(api_key=GEMINI_API_KEY)
 

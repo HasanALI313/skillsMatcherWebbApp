@@ -1,10 +1,15 @@
 import sys, os
 sys.path.insert(0, os.path.dirname(__file__))
 
+try:
+    from webapp.adzuna import search_jobs
+    from webapp.llm_matcher import match_top_3, get_job_skills
+except ImportError:
+    from adzuna import search_jobs
+    from llm_matcher import match_top_3, get_job_skills
+
 from flask import Flask, render_template, request, session
 from datetime import datetime
-from adzuna import search_jobs
-from llm_matcher import match_top_3, get_job_skills
 
 app = Flask(__name__)
 app.secret_key = os.urandom(24).hex()

@@ -1,5 +1,12 @@
+import sys, os
+
+try:
+    from webapp.config import ADZUNA_APP_ID, ADZUNA_API_KEY, ADZUNA_COUNTRY
+except ImportError:
+    sys.path.insert(0, os.path.dirname(__file__))
+    from config import ADZUNA_APP_ID, ADZUNA_API_KEY, ADZUNA_COUNTRY
+
 import requests
-from config import ADZUNA_APP_ID, ADZUNA_API_KEY, ADZUNA_COUNTRY
 
 BASE_URL = "https://api.adzuna.com/v1/api/jobs"
 

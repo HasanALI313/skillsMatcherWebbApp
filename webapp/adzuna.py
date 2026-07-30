@@ -1,10 +1,14 @@
-import sys, os
+import os
 
 try:
     from webapp.config import ADZUNA_APP_ID, ADZUNA_API_KEY, ADZUNA_COUNTRY
 except ImportError:
-    sys.path.insert(0, os.path.dirname(__file__))
-    from config import ADZUNA_APP_ID, ADZUNA_API_KEY, ADZUNA_COUNTRY
+    try:
+        from config import ADZUNA_APP_ID, ADZUNA_API_KEY, ADZUNA_COUNTRY
+    except ImportError:
+        ADZUNA_APP_ID = os.environ.get("ADZUNA_APP_ID", "")
+        ADZUNA_API_KEY = os.environ.get("ADZUNA_API_KEY", "")
+        ADZUNA_COUNTRY = os.environ.get("ADZUNA_COUNTRY", "gb")
 
 import requests
 
